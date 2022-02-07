@@ -1,110 +1,73 @@
+#include <SPI.h> //Library for using SPI Communication 
+#include <mcp2515.h> //Library for using CAN Communication
+#include <LiquidCrystal_I2C.h> //Library for using 16x2 LCD display
 
-//YWROBOT
-//Compatible with the Arduino IDE 1.0
-//Library version:1.1
-#include <LiquidCrystal_I2C.h>
+struct can_frame canMsg; 
+MCP2515 mcp2515(53); // SPI CS Pin 10 for Uno, Pin 53 for Mega2560 
+LiquidCrystal_I2C lcd(0x27,16,2);  // set the LCD address to 0x27 (Standard address) for a 16 chars and 2 line display
 
-LiquidCrystal_I2C lcd(0x27,20,4);  // set the LCD address to 0x27 for a 16 chars and 2 line display
-int tallVerdi = 200;
-float prosent = 0.9999;
-float soc = prosent*100;
+//Creating two custom characters to print on the display
+byte smiley[8] = {
+  B11011,
+  B11011,
+  B00000,
+  B00000,
+  B10001,
+  B10001,
+  B01110,
+};
+byte smileyWink[8] = {
+  B00011,
+  B11011,
+  B00000,
+  B00000,
+  B10001,
+  B10001,
+  B01110,
+};
 
+void setup() {
+  SPI.begin();   //Begins SPI communication
+  Serial.begin(9600); //Begins Serial Communication at 9600 baud rate 
 
-void setup()
-{
-  //batteri informasjon
-  
-  /* Eksempel på hvordan å lagre en string med tekst
-  char Str4[15] = "arduino";
-  char Var2[8] = {'a', 'r', 'd', 'u', 'i', 'n', 'o'};
-  */
+  mcp2515.reset(); //Reset mcp unit to ensure proper operation
+  mcp2515.setBitrate(CAN_500KBPS,MCP_8MHZ); //Sets CAN at speed 500KBPS and Clock 8MHz 
+  mcp2515.setNormalMode();  //Sets CAN at normal mode
 
-  //LCD oppsett
-  lcd.begin();                      // initialize the lcd 
-  lcd.backlight();
+  lcd.begin();  // initialize the lcd 
+  lcd.backlight();  //Start backlighting for LCD display
 
-
-  /* Print a message to the LCD.
-
-  lcd.setCursor(0,0);
-  //lcd.print("Batteriprosent:");
-  lcd.setCursor(0,1);
-  int bat1 = 80;
-  //lcd.print("Soc: ");
-  lcd.setCursor(5,1);
-  lcd.print(soc);
-  lcd.setCursor(10,1);
-  lcd.print("%");
-  */
-
+  lcd.createChar(0, smiley);
+  lcd.createChar(1, smileyWink);  
 }
 
-
-void loop()
-{
-  lcd.setCursor(0,0);
-  lcd.print("B1");
-  lcd.setCursor(0,1);
-  lcd.setCursor(3,0);
-  lcd.print(69);
-  lcd.setCursor(6,0);
-  lcd.print("%");
-
-  lcd.setCursor(8,0);
-  lcd.print("B2");
-  lcd.setCursor(0,1);
-  lcd.setCursor(11,0);
-  lcd.print(69);
-  lcd.setCursor(14,0);
-  lcd.print("%");
+void loop(){
   
-  lcd.setCursor(0,1);
-  lcd.print("B3");
-  lcd.setCursor(3,1);
-  lcd.print(69);
-  lcd.setCursor(6,1);
-  lcd.print("%");
+  if ((mcp2515.readMessage(&canMsg) == MCP2515::ERROR_OK) && (canMsg.can_id == 0x036)){
+    int x = canMsg.data[0]; //Read data byte 0
+    int y = canMsg.data[1]; //Read data byte 1
 
-  lcd.setCursor(8,1);
-  lcd.print("B4");
-  lcd.setCursor(11,1);
-  lcd.print(169);
-  lcd.setCursor(14,1);
-  lcd.print("%");
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("Arbitrary1:");
+    lcd.setCursor(12,0);
+    lcd.print(x);
+    lcd.setCursor(15,0);
+    lcd.print("%");
 
-  delay(5000);
-  lcd.setCursor(0,0);
-  lcd.print("                            "); //Clear first line of the screen
-  lcd.setCursor(0,1);
-  lcd.print("                            "); //Clear second line of the screen
-  lcd.setCursor(0,0);
-  lcd.print("Bat1:");
-  lcd.setCursor(6,0);
-  lcd.print("100%");
-  lcd.setCursor(0,1);
-  lcd.print("Bat2:");
-  lcd.setCursor(6,1);
-  lcd.print("100%");
-  
-  delay(5000);
-  lcd.setCursor(0,0);
-  lcd.print("                            "); //X321ANA
-  lcd.setCursor(0,1);
-  lcd.print("                            "); //Hugh Gee Rection
-  
-  lcd.setCursor(0,0);  
-  lcd.print("Bat3:");
-  lcd.setCursor(6,0);
-  lcd.print("100%");
-  lcd.setCursor(0,1);
-  lcd.print("Bat4:");
-  lcd.setCursor(6,1);
-  lcd.print("100%");
+    lcd.setCursor(0,1);
+    lcd.print("Arbitrary2:");
+    lcd.setCursor(12,1);
+    lcd.print(y);
+    lcd.setCursor(15,1);
+    lcd.print("%");
+    delay(5000);
 
-  delay(5000);
-  lcd.setCursor(0,0);
-  lcd.print("                            ");
-  lcd.setCursor(0,1);
-  lcd.print("                            ");
-
+    lcd.setCursor(15,0);
+    lcd.write(byte(0));
+    delay(1000);
+    lcd.setCursor(15,0);
+    lcd.write(byte(1));
+    delay(5000);
+  }
 }
