@@ -4,8 +4,8 @@
 #include <Adafruit_TFTLCD.h> // Hardware-specific library
 
 
-struct can_frame canMsg; 
-MCP2515 mcp2515(9); // SPI CS Pin 10 for Uno, Pin 53 for Mega2560 
+//struct can_frame canMsg; 
+//MCP2515 mcp2515(9); // SPI CS Pin 9 for Uno, Pin 53 for Mega2560 
 
 #define LCD_CS A3 // Chip Select goes to Analog 3
 #define LCD_CD A2 // Command/Data goes to Analog 2
@@ -38,9 +38,9 @@ void setup() {
   SPI.begin();   //Begins SPI communication
   Serial.begin(9600); //Begins Serial Communication at 9600 baud rate 
 
-  mcp2515.reset(); //Reset mcp unit to ensure proper operation
-  mcp2515.setBitrate(CAN_500KBPS,MCP_8MHZ); //Sets CAN at speed 500KBPS and Clock 8MHz 
-  mcp2515.setNormalMode();  //Sets CAN at normal mode
+  //mcp2515.reset(); //Reset mcp unit to ensure proper operation
+  //mcp2515.setBitrate(CAN_500KBPS,MCP_8MHZ); //Sets CAN at speed 500KBPS and Clock 8MHz 
+  //mcp2515.setNormalMode();  //Sets CAN at normal mode
 
   SERIAL_PORT_MONITOR.begin(9600);
   pinMode(LED, OUTPUT);
@@ -119,10 +119,10 @@ void loop(){
         }
         SERIAL_PORT_MONITOR.println();
     }
-
-  if ((mcp2515.readMessage(&canMsg) == MCP2515::ERROR_OK) && (canMsg.can_id == 0x036)){
-    int x = canMsg.data[0]; //Read data byte 0
-    int y = canMsg.data[1]; //Read data byte 1
+/*
+  //if ((mcp2515.readMessage(&canMsg) == MCP2515::ERROR_OK) && (canMsg.can_id == 0x036)){
+    //int x = canMsg.data[0]; //Read data byte 0
+    //int y = canMsg.data[1]; //Read data byte 1
     
     Serial.print(F("Text                     "));
     Serial.println(testText());
@@ -144,7 +144,7 @@ void loop(){
     Serial.println("State of health");
     Serial.println(0.1);
     delay(500);
-  }
+  //} */
 }
 
 unsigned long testText() {
