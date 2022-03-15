@@ -1,0 +1,201 @@
+// demo: CAN-BUS Shield, receive data with check mode
+// send data coming to fast, such as less than 10ms, you can use this way
+// loovee, 2014-6-13
+#include <Adafruit_GFX.h>    // Core graphics library
+#include "Adafruit_ILI9341.h" // Hardware-specific library
+#include <SPI.h>
+#include "mcp2515_can.h"
+#include <SD.h>
+
+
+#define CAN_2515
+#define TFT_DC 9
+#define TFT_CS 10
+Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
+
+#define SD_CS 4
+#define	BLACK   0x0000
+#define	BLUE    0x001F
+#define	RED     0xF800
+#define	GREEN   0x07E0
+#define CYAN    0x07FF
+#define MAGENTA 0xF81F
+#define YELLOW  0xFFE0
+#define WHITE   0xFFFF
+
+const int SPI_CS_PIN = 9;
+const int CAN_INT_PIN = 2;
+const int LED        = 8;
+boolean ledON        = 1;
+
+mcp2515_can CAN(SPI_CS_PIN); // Set CS pin
+
+void setup() {
+  tft.begin();
+  tft.fillScreen(MAGENTA);
+  tft.setCursor(0, 13);   
+  tft.setTextSize(3);
+  tft.print("SoC");
+    SERIAL_PORT_MONITOR.begin(9600);
+    pinMode(LED, OUTPUT);
+
+    while (CAN_OK != CAN.begin(CAN_500KBPS)) {             // init can bus : baudrate = 500k
+        SERIAL_PORT_MONITOR.println("CAN init fail, retry...");
+        delay(100);
+    }
+    SERIAL_PORT_MONITOR.println("CAN init ok!");
+    
+}
+
+
+void loop() {
+    unsigned char len = 0;
+    unsigned char buf[8];
+    unsigned long canid = CAN_MSGAVAIL;
+    //SERIAL_PORT_MONITOR.println(canid);
+
+    for (int p = 0; p <= 4; p++) {
+//    SERIAL_PORT_MONITOR.println(i);
+//    SERIAL_PORT_MONITOR.println(" is the value of i");
+
+      //Set CAN ID
+      if (p == 1){
+        CAN.sendMsgBuf(0x19B50500, 1, 0, 0);
+        SERIAL_PORT_MONITOR.println("p == 1");
+        //delay(1000);
+      }
+      else if(p == 2){
+        CAN.sendMsgBuf(0x19B50001, 1, 0, 0);
+        SERIAL_PORT_MONITOR.println("p == 2");
+        //delay(1000);
+      }
+      else if(p == 3){
+        CAN.sendMsgBuf(0x19B50008, 1, 0, 0);
+        SERIAL_PORT_MONITOR.println("p == 3");
+        //delay(1000);
+      }
+      else if(p == 4){
+        CAN.sendMsgBuf(0x19B50000, 1, 0, 0);
+        SERIAL_PORT_MONITOR.println("p == 4");
+        //delay(1000);
+      }
+      else if(p == 0){
+        CAN.sendMsgBuf(0x19B50600, 1, 0, 0);
+        SERIAL_PORT_MONITOR.println("p == 0");
+        //delay(3000);
+      }
+      else{
+        SERIAL_PORT_MONITOR.println("What the fuck just happened?");
+        //delay(10000);
+      }
+
+    //Magic
+    if (true){ //CAN_MSGAVAIL == CAN.checkReceive()) {         // check if data coming
+        CAN.readMsgBuf(&len, buf);    // read data,  len: data length, buf: data buf
+
+        unsigned long canId = CAN.getCanId();
+      int soc = buf[6];
+      SERIAL_PORT_MONITOR.println(soc, DEC);
+        SERIAL_PORT_MONITOR.println("-----------------------------");
+        SERIAL_PORT_MONITOR.println("get data from ID: 0x");
+        SERIAL_PORT_MONITOR.println(canId, HEX);
+        SERIAL_PORT_MONITOR.println(canId);
+        SERIAL_PORT_MONITOR.println("-----------------------------");
+        for(int r = 0; r<=7; r++){
+        SERIAL_PORT_MONITOR.println(buf[r]);
+        //delay(100);
+        }
+        SERIAL_PORT_MONITOR.println("-----------------------------");
+      
+
+
+
+
+      //0x19B50500 (SoC, top right corner)
+      tft.setTextColor(WHITE); tft.setTextSize(3); 
+      tft.drawLine(59, 0, 59, 320, WHITE);
+      if(canId == 0x19B50500){
+        int soc = (buf[6]);
+        tft.fillRect(60, 0, 180, 40, BLACK);
+        tft.setCursor(136, 13);   // SoC info
+        tft.print(soc);
+        tft.setCursor(220, 13);  // %
+        tft.print("%");
+      }
+
+      if(canId == 0x19B50001){
+        int aaa = (buf[2]); //Average voltage
+        tft.fillRect(60, 41, 180, 40, RED); // 
+        tft.setCursor(136, 55);   //
+        tft.print(2+aaa*0.01);
+        tft.setCursor(220, 55);  // 
+        tft.print("V");
+        SERIAL_PORT_MONITOR.println("canId == 0x19B50001");
+        SERIAL_PORT_MONITOR.println("aaa");
+        SERIAL_PORT_MONITOR.println(aaa);
+        
+      }
+      if(canId == 0x19B50008){
+        int ccc = (buf[2]); //temperature
+        tft.fillRect(60, 82, 180, 40, GREEN); // 
+        tft.setCursor(136, 99);
+        tft.print(ccc-100);
+        tft.setCursor(220, 99);  
+        tft.print("C");
+        SERIAL_PORT_MONITOR.println("canId == 0x19B50008");
+        SERIAL_PORT_MONITOR.println("ccc");
+        SERIAL_PORT_MONITOR.println(ccc);
+        
+      }
+      if(canId == 0x19B50000){
+        int bbb = (buf[7]); //Number of live cells
+        tft.fillRect(60, 123, 180, 40, BLUE); // 
+        tft.setCursor(110, 141);   // SoC info
+        tft.print(bbb);
+        tft.setCursor(150, 141);  // 
+        tft.print("Cells");
+        SERIAL_PORT_MONITOR.println("canId == 0x19B50000");
+        SERIAL_PORT_MONITOR.println("bbb");
+        SERIAL_PORT_MONITOR.println(bbb);
+        
+      }
+      if(canId == 0xFF){
+        tft.fillRect(60, 144, 180, 40, BLUE); // 
+        tft.setCursor(136, 157);   // info
+        tft.print("");
+        tft.setCursor(220, 157);  // 
+        tft.print("");
+      }
+        
+
+        for (int i = 0; i < len; i++) { // print the data
+            SERIAL_PORT_MONITOR.print(buf[i], DEC);
+            SERIAL_PORT_MONITOR.print("\t");
+            if (ledON && i == 0) {
+
+                digitalWrite(LED, buf[i]);
+                ledON = 0;
+                //delay(500);
+            } else if ((!(ledON)) && i == 4) {
+
+                digitalWrite(LED, buf[i]);
+                ledON = 1;
+            }
+        }
+
+        SERIAL_PORT_MONITOR.println();
+
+      } // If statement
+
+      
+        
+      
+      //delay(2000);
+    } // For loop
+    
+
+}
+
+//END FILE
+
+//320x240
