@@ -126,9 +126,9 @@ void loop() {
       if(canId == 0x19B50001){
         int aaa = (buf[2]); //Average voltage
         tft.fillRect(60, 41, 180, 40, RED); // 
-        tft.setCursor(136, 55);   //
+        tft.setCursor(136, 54);   //
         tft.print(2+aaa*0.01);
-        tft.setCursor(220, 55);  // 
+        tft.setCursor(220, 54);  // 
         tft.print("V");
         SERIAL_PORT_MONITOR.println("canId == 0x19B50001");
         SERIAL_PORT_MONITOR.println("aaa");
@@ -138,9 +138,12 @@ void loop() {
       if(canId == 0x19B50008){
         int ccc = (buf[2]); //temperature
         tft.fillRect(60, 82, 180, 40, GREEN); // 
-        tft.setCursor(136, 99);
+        tft.setCursor(136, 95);
         tft.print(ccc-100);
-        tft.setCursor(220, 99);  
+        tft.drawCircle(214, 92, 3, WHITE);
+        tft.drawCircle(214, 92, 4, WHITE);
+        tft.drawCircle(214, 92, 5, WHITE);
+        tft.setCursor(220, 95);  
         tft.print("C");
         SERIAL_PORT_MONITOR.println("canId == 0x19B50008");
         SERIAL_PORT_MONITOR.println("ccc");
@@ -150,9 +153,9 @@ void loop() {
       if(canId == 0x19B50000){
         int bbb = (buf[7]); //Number of live cells
         tft.fillRect(60, 123, 180, 40, BLUE); // 
-        tft.setCursor(110, 141);   // SoC info
+        tft.setCursor(110, 136);   // SoC info
         tft.print(bbb);
-        tft.setCursor(150, 141);  // 
+        tft.setCursor(150, 136);  // 
         tft.print("Cells");
         SERIAL_PORT_MONITOR.println("canId == 0x19B50000");
         SERIAL_PORT_MONITOR.println("bbb");
